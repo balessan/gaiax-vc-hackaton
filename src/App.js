@@ -5,17 +5,36 @@ import QRCode from "qrcode.react";
 function App() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
+  const [schemaId, setSchemaId] = useState(null);
+  const [attributes, setAttributes] = useState([]);
 
   useEffect(() => {
+    const fetchSchemaData = async () => {
+      try {
+        const result = await axios.post(
+          "https://gaiax.vereign.com/ocm/attestation/v1/schemas?alias=trust",
+          {
+            name: "Hackaton-Poc",
+            createdBy: "BenoitAndTobias",
+            version: "1.0",
+            attributes: ["firstname", "lastname"],
+          }
+        );
+        setSchemaId(result.data.schemaId);
+        setAttributes(result.data.attributes);
+      } catch (error) {
+        setError(error);
+      }
+    };
+    fetchSchemaData();
+
     const fetchData = async () => {
       try {
         const result = await axios.post(
           "https://gaiax.vereign.com/ocm/connection/v1/invitation-url?alias=trust",
           {
             autoAcceptConnection: true,
-            alias: "string",
-            myLabel: "string",
-            myImageUrl: "string",
+            myLabel: "ConnexionRequest"
           }
         );
         console.log(result.data);
@@ -43,6 +62,15 @@ function App() {
       <p>{data.invitationUrl}</p>
       <h2>QR Code:</h2>
       {data && data.invitationUrl && <QRCode value={data.invitationUrl} />}
+
+      <h2>Schema ID:</h2>
+      <p>{schemaId}</p>
+      <h2>Attributes:</h2>
+      <ul>
+        {attributes.map((attribute, index) => (
+          <li key={index}>{attribute}</li>
+        ))}
+      </ul>
     </div>
   );
 }
